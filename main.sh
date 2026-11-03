@@ -1,31 +1,37 @@
+
 #!/bin/bash
+
 while true
 do
     echo ""
     echo "      EMPLOYEE ATTENDANCE TRACKER"
-    echo "1. View Attendance"
-    echo "2. Track Working Hours and Late Arrivals"
-    echo "3. Payroll Report"
-    echo "4. Attendance Reports"
-    echo "5. Detect Attendance Anomalies"
+    echo "1. Add Attendance"
+    echo "2. View Attendance"
+    echo "3. Track Working Hours and Late Arrivals"
+    echo "4. Payroll Report"
+    echo "5. Attendance Reports"
+    echo "6. Detect Attendance Anomalies"
     echo "0. Exit"
 
-    read -p "Enter your choice: " choice
+    read -r -p "Enter your choice: " choice
 
     case $choice in
         1)
-            bash attendance.sh
+            bash attendance.sh add
             ;;
         2)
-            bash time_tracking.sh
+            bash attendance.sh view
             ;;
         3)
-            bash payroll.sh
+            bash time_tracking.sh
             ;;
         4)
-            bash reports.sh
+            bash payroll.sh
             ;;
         5)
+            bash reports.sh
+            ;;
+        6)
             bash anomaly_detector.sh
             ;;
         0)
@@ -37,3 +43,4 @@ do
             ;;
     esac
 done
+
