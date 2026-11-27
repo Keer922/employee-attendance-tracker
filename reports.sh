@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Employee Attendance Tracker
-# Member 4 - Attendance Reports
 
-FILE="attendance.csv"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+FILE="$SCRIPT_DIR/attendance.csv"
 
 if [ ! -f "$FILE" ]; then
     echo "Error: attendance.csv not found!"
@@ -19,15 +19,28 @@ echo "1. GENERAL SUMMARY"
 
 awk -F, '
 NR > 1 {
+    for (i = 1; i <= NF; i++) {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+    }
+
+    if (NF != 4 || $1 == "" || $2 == "")
+        next
+
     records++
     employees[$1] = 1
 
-    if ($3 > "09:15")
-        late++
+    if ($3 ~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/) {
+        split($3, a, ":")
+        checkin = a[1]*60 + a[2]
 
-    if ($4 == "")
+        if (checkin > 555)
+            late++
+    }
+
+    if ($4 == "" || $4 == "-")
         missing++
 }
+
 END {
     for (e in employees)
         total++
@@ -41,29 +54,53 @@ END {
 echo ""
 echo "2. LATE ARRIVALS (After 09:15 AM)"
 
-awk -F, 'NR > 1 && $3 > "09:15" {
-    print $1, "|", $2, "| Check-in:", $3
+awk -F, '
+NR > 1 {
+    for (i = 1; i <= NF; i++)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+
+    if (NF != 4 || $1 == "" || $2 == "")
+        next
+
+    if ($3 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/)
+        next
+
+    split($3, a, ":")
+    checkin = a[1]*60 + a[2]
+
+    if (checkin > 555)
+        print $1, "|", $2, "| Check-in:", $3
 }' "$FILE"
 
 echo ""
-echo "3. OVERTIME (More than 8 hours, up to 12 hours)"
+echo "3. OVERTIME (More than 8 hours)"
 
 awk -F, '
-NR > 1 &&
-$3 ~ /^[0-9][0-9]:[0-9][0-9]$/ &&
-$4 ~ /^[0-9][0-9]:[0-9][0-9]$/ {
+NR > 1 {
+    for (i = 1; i <= NF; i++)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
 
-    split($3,a,":")
-    split($4,b,":")
+    if (NF != 4 || $1 == "" || $2 == "")
+        next
 
-    start = a[1]*60+a[2]
-    finish = b[1]*60+b[2]
+    if ($3 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/ ||
+        $4 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/)
+        next
 
-    if (finish > start && finish-start > 480 &&
-        finish-start <= 720) {
+    split($3, a, ":")
+    split($4, b, ":")
 
+    start = a[1]*60 + a[2]
+    finish = b[1]*60 + b[2]
+
+    if (finish <= start)
+        next
+
+    hours = (finish-start)/60
+
+    if (hours > 8) {
         printf "%s | %s | Hours: %.2f\n",
-        $1, $2, (finish-start)/60
+        $1, $2, hours
     }
 }' "$FILE"
 
@@ -71,27 +108,47 @@ echo ""
 echo "4. EARLY CHECKOUTS (Before 05:00 PM)"
 
 awk -F, '
-NR > 1 && $4 != "" &&
-$3 ~ /^[0-9][0-9]:[0-9][0-9]$/ &&
-$4 ~ /^[0-9][0-9]:[0-9][0-9]$/ &&
-$4 > $3 && $4 < "17:00" {
+NR > 1 {
+    for (i = 1; i <= NF; i++)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
 
-    print $1, "|", $2, "| Check-out:", $4
+    if (NF != 4 || $1 == "" || $2 == "")
+        next
+
+    if ($3 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/ ||
+        $4 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/)
+        next
+
+    split($3, a, ":")
+    split($4, b, ":")
+
+    start = a[1]*60 + a[2]
+    finish = b[1]*60 + b[2]
+
+    if (finish > start && finish < 1020)
+        print $1, "|", $2, "| Check-out:", $4
 }' "$FILE"
 
 echo ""
 echo "5. SHORT SHIFTS (Less than 6 hours)"
 
 awk -F, '
-NR > 1 &&
-$3 ~ /^[0-9][0-9]:[0-9][0-9]$/ &&
-$4 ~ /^[0-9][0-9]:[0-9][0-9]$/ {
+NR > 1 {
+    for (i = 1; i <= NF; i++)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
 
-    split($3,a,":")
-    split($4,b,":")
+    if (NF != 4 || $1 == "" || $2 == "")
+        next
 
-    start = a[1]*60+a[2]
-    finish = b[1]*60+b[2]
+    if ($3 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/ ||
+        $4 !~ /^([01][0-9]|2[0-3]):[0-5][0-9]$/)
+        next
+
+    split($3, a, ":")
+    split($4, b, ":")
+
+    start = a[1]*60 + a[2]
+    finish = b[1]*60 + b[2]
 
     if (finish > start && finish-start < 360) {
         printf "%s | %s | Hours: %.2f\n",
@@ -102,8 +159,15 @@ $4 ~ /^[0-9][0-9]:[0-9][0-9]$/ {
 echo ""
 echo "6. MISSING CHECKOUTS"
 
-awk -F, 'NR > 1 && $4 == "" {
-    print $1, "|", $2, "| Checkout not recorded"
+awk -F, '
+NR > 1 {
+    for (i = 1; i <= NF; i++)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+
+    if (NF == 4 && $1 != "" && $2 != "" &&
+        ($4 == "" || $4 == "-")) {
+        print $1, "|", $2, "| Checkout not recorded"
+    }
 }' "$FILE"
 
 echo ""
