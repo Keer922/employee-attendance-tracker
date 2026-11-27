@@ -108,4 +108,3 @@ awk -F, 'NR > 1 && $4 == "" {
 
 echo ""
 echo "          REPORT COMPLETE"
-```
