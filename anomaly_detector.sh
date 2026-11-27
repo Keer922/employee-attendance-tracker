@@ -74,4 +74,3 @@ END {
     print "Scan complete."
 }
 ' "$FILE"
-```
