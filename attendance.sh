@@ -16,7 +16,7 @@ fi
 # Function to add attendance
 add_attendance() {
 
-    echo "===== Add Attendance ====="
+    echo "Add Attendance "
 
     read -r -p "Enter Employee ID: " employee_id
     read -r -p "Enter Date (YYYY-MM-DD): " date
