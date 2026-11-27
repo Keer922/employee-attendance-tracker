@@ -64,7 +64,12 @@ add_attendance() {
     # Check whether check-out is after check-in
     # Overnight shifts are allowed
     if [[ "$check_out" == "$check_in" ]]; then
-        echo "Error: Check-out time cannot be the same as check-in time!"
+    echo "Error: Check-out time cannot be the same as check-in time!"
+    return 1
+    fi
+
+    if [[ "$check_out" < "$check_in" ]]; then
+        echo "Error: Check-out cannot be earlier than check-in!"
         return 1
     fi
 
