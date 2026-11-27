@@ -12,7 +12,7 @@ if [[ ! -f "$DATA_FILE" ]]; then
     exit 1
 fi
 
-echo "============== EMPLOYEE TIME TRACKING =============="
+echo " EMPLOYEE TIME TRACKING "
 
 
 printf "%-12s %-12s %-12s %-12s %-10s %-12s %-10s\n" \
@@ -97,4 +97,3 @@ NR > 1 {
 
 echo "---------------------------------------------------------------------------------------------"
 echo "Time tracking completed!"
-
